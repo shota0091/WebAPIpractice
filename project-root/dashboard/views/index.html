@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>プロセス監視ダッシュボード</title>
+  <style>
+    body { font-family: "Segoe UI", sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+    h1 { text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+    th { background: #e9ecef; }
+    tr.running { background-color: #d1e7dd; }
+    tr.stopped { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+  <h1>🖥️ プロセス監視ダッシュボード</h1>
+  <table id="statusTable">
+    <thead>
+      <tr>
+        <th>ホスト名</th>
+        <th>プロセス名</th>
+        <th>状態</th>
+        <th>メッセージ</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function loadStatus() {
+      const res = await fetch("/api/status");
+      const data = await res.json();
+      const tbody = document.querySelector("#statusTable tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.className = item.running ? "running" : "stopped";
+        tr.innerHTML = `
+          <td>${item.hostname}</td>
+          <td>${item.process}</td>
+          <td>${item.running ? "稼働中 ✅" : "停止中 ❌"}</td>
+          <td>${item.message}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 10000); // 10秒ごとに画面更新
+  </script>
+</body>
+</html>

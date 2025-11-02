@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request,Response
-import psutil, socket, datetime
+import psutil, socket
 import json
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False 
@@ -7,7 +7,8 @@ app.config['JSON_AS_ASCII'] = False
 @app.route("/helo",methods=["GET"])
 def get_hello():
     try:
-        return jsonify({"results": "OK"}), 200
+        data = {"results": "OK"}
+        return complete(data)
     except Exception  as e:
         return error(e)
 
@@ -18,10 +19,20 @@ def get_passParameter(name):
             "message": "パラメータを受け取りました",
             "received_name": name
         }
-        json_data = json.dumps(data, ensure_ascii=False, indent=2)
-        return Response(json_data, status=200, content_type="application/json; charset=utf-8")
+        return complete(data)
     except Exception  as e:
         return error(e)
+
+@app.route("/queryTest",methods=["GET"])
+def get_queryTest():
+    try:
+        name = request.args.get("name")
+        age = request.args.get("age")
+        data =[{"name":name,"age":age}]
+        return complete(data)
+    except Exception  as e:
+        return error(e)
+
 
 @app.route("/status", methods=["POST"])
 def get_status():
@@ -39,18 +50,19 @@ def get_status():
                 "process": target,
                 "running": running
             }
-        reqJsonItemList.append(reqJsonItem)
-        json_data = json.dumps(reqJsonItemList, ensure_ascii=False, indent=2)
-
-        return Response(json_data, status=200, content_type="application/json; charset=utf-8")
+            reqJsonItemList.append(reqJsonItem)
+        return complete(reqJsonItemList)
     except Exception  as e:
         return error(e)
 
+def complete(data, status=200):
+    json_data = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(json_data, status, content_type="application/json; charset=utf-8")
+
 def error(e, status=500):
-    return jsonify({
-        "results": "NG",
-        "error": str(e)
-    }), status
+    data = { "results": "NG","error": str(e)}
+    json_data = json.dumps(data, ensure_ascii=False, indent=2)
+    return Response(json_data, status, content_type="application/json; charset=utf-8")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
